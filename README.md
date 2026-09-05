@@ -1,4 +1,4 @@
-# 🌾 Rice Leaf Disease Detection System
+# Rice Leaf Disease Detection System
 
 A deep learning system that detects and classifies rice leaf diseases from images,
 with visual explanations powered by Grad-CAM++.
@@ -7,7 +7,7 @@ Built as a final-year project at the University of Medical Sciences, Ondo (UNIME
 
 ---
 
-## 🎯 Overview
+## Overview
 
 Rice diseases cause significant crop loss across farming communities. This system
 allows farmers or agricultural workers to upload a photo of a rice leaf and instantly
@@ -16,7 +16,7 @@ the model focused on.
 
 ---
 
-## 🔍 Detected Classes
+## Detected Classes
 
 | Disease | Description |
 |---|---|
@@ -28,7 +28,7 @@ the model focused on.
 
 ---
 
-## 🧠 Model Architecture
+## Model Architecture
 
 - **Base model:** MobileNetV2 (pretrained on ImageNet, frozen during training)
 - **Custom head:** GlobalAveragePooling → Dense(128, ReLU) → Dropout(0.3) → Dense(5, Softmax)
@@ -46,7 +46,7 @@ the model focused on.
 
 ---
 
-## 🗂️ Project Structure
+## Project Structure
 
 Rice-leaf-disease-detection/
 ├── api/
@@ -59,7 +59,7 @@ Rice-leaf-disease-detection/
 
 ---
 
-## ⚙️ How to Run the Backend
+## How to Run the Backend
 
 ### 1. Install dependencies
 
@@ -90,7 +90,7 @@ Visit `http://localhost:8001/ping` — you should see:
 
 ---
 
-## 🏋️ How to Train the Model
+## How to Train the Model
 
 ### 1. Set environment variables
 
@@ -110,14 +110,14 @@ classification report, and Grad-CAM++ visualisations to your `OUTPUT_DIR`.
 
 ---
 
-## 📱 Demo
+## Demo
 
 See `demo.mp4` for a live walkthrough of the mobile app interface,
 showing real-time disease detection and Grad-CAM++ heatmap overlay.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Model:** TensorFlow / Keras, MobileNetV2
 - **Backend:** FastAPI, Uvicorn
