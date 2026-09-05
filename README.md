@@ -127,7 +127,7 @@ showing real-time disease detection and Grad-CAM++ heatmap overlay.
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **Olasehinde Oluwagbogo Oluwadunsin Praise**  
 Final Year Student — Information Technology  
