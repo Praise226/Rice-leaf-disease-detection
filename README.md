@@ -129,7 +129,7 @@ showing real-time disease detection and Grad-CAM++ heatmap overlay.
 
 ## Author
 
-**Olasehinde Oluwagbogo Oluwadunsin Praise**  
+**Olasehinde Oluwagbogo Oluwadunsi Praise**  
 Final Year Student — Information Technology  
 University of Medical Sciences, Ondo (UNIMED)  
 GitHub: [@Praise226](https://github.com/Praise226)
