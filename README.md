@@ -11,7 +11,7 @@ Built as a final-year project at the University of Medical Sciences, Ondo (UNIME
 
 Rice diseases cause significant crop loss across farming communities. This system
 allows farmers or agricultural workers to upload a photo of a rice leaf and instantly
-receive a diagnosis — along with a heatmap showing exactly which part of the leaf
+receive a diagnosis along with a heatmap showing exactly which part of the leaf
 the model focused on.
 
 ---
@@ -40,7 +40,7 @@ the model focused on.
 
 | Metric | Score |
 |---|---|
-| Test Accuracy | 99.70% |
+| Test Accuracy | 99.77% |
 | Optimizer | Adam |
 | Loss Function | Sparse Categorical Crossentropy |
 
