@@ -237,65 +237,38 @@ print("Confusion matrix saved")
 # ─── 14. Grad-CAM++ implementation ───────────────────────────────────────────
 def get_gradcam_plusplus(model, img_array, layer_name, class_idx):
     """
-    Generates a Grad-CAM++ saliency map for the given class index.
-
-    Parameters
-    ----------
-    model      : trained Keras model
-    img_array  : preprocessed image batch (1, H, W, C)
-    layer_name : name of the target convolutional layer (e.g. 'Conv_1')
-    class_idx  : index of the predicted class
-
-    Returns
-    -------
-    cam : normalised heatmap array (H, W) in range [0, 1]
+    Generate Grad-CAM++ using the selected class score from the full model.
+    img_array must contain the original image pixel values expected by model.
     """
-    base_model = model.get_layer("mobilenetv2_1.00_224")
-
+    backbone = model.get_layer("mobilenetv2_1.00_224")
+    target_layer = backbone.get_layer(layer_name)
     grad_model = tf.keras.models.Model(
-        inputs=base_model.input,
-        outputs=[
-            base_model.get_layer(layer_name).output,
-            base_model.output,
-        ],
+        inputs=model.inputs,
+        outputs=[target_layer.output, model.output],
     )
 
     with tf.GradientTape() as tape:
-        inputs       = tf.cast(img_array, tf.float32)
-        preprocessed = model.layers[1](inputs)   # resize_and_rescale
-        preprocessed = model.layers[2](preprocessed)  # data_augmentation
+        inputs = tf.cast(img_array, tf.float32)
+        conv_outputs, predictions = grad_model(inputs, training=False)
+        class_score = predictions[:, class_idx]
 
-        conv_outputs, base_predictions = grad_model(preprocessed)
-        loss = base_predictions[:, class_idx]
+    grads = tape.gradient(class_score, conv_outputs)
+    if grads is None:
+        raise RuntimeError("Could not calculate Grad-CAM++ gradients.")
 
-    grads = tape.gradient(loss, conv_outputs)
+    grads_power_2 = tf.square(grads)
+    grads_power_3 = grads_power_2 * grads
+    sum_activations = tf.reduce_sum(conv_outputs, axis=(1, 2), keepdims=True)
 
-    grads_power_2 = grads ** 2
-    grads_power_3 = grads ** 3
+    eps = tf.keras.backend.epsilon()
+    alpha_denom = 2.0 * grads_power_2 + sum_activations * grads_power_3 + eps
+    alphas = grads_power_2 / alpha_denom
+    weights = tf.reduce_sum(alphas * tf.nn.relu(grads), axis=(1, 2))
 
-    sum_activations = tf.reduce_sum(conv_outputs, axis=(1, 2))
-
-    eps         = 1e-7
-    alpha_num   = grads_power_2
-    alpha_denom = (
-        2.0 * grads_power_2
-        + sum_activations[:, tf.newaxis, tf.newaxis, :] * grads_power_3
-        + eps
-    )
-    alphas    = alpha_num / alpha_denom
-    relu_grads = tf.nn.relu(grads)
-    weights    = tf.reduce_sum(alphas * relu_grads, axis=(1, 2))
-
-    conv_outputs = conv_outputs[0]
-    weights      = weights[0]
-
-    cam = tf.reduce_sum(weights * conv_outputs, axis=-1)
+    cam = tf.reduce_sum(weights[0] * conv_outputs[0], axis=-1)
     cam = tf.nn.relu(cam)
-    cam = cam.numpy()
-    cam = (cam - cam.min()) / (cam.max() - cam.min() + eps)
-
-    return cam
-
+    cam = cam / (tf.reduce_max(cam) + eps)
+    return cam.numpy()
 
 def overlay_heatmap(img_array, cam, alpha=0.4):
     """Overlays the Grad-CAM++ heatmap on the original image."""
