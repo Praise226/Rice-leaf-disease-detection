@@ -1,21 +1,36 @@
-# Model weights
-*.h5
-*.keras
-
 # Python
 __pycache__/
-*.pyc
-*.pyo
-.env
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
 
-# Jupyter
+# Virtual environments and local configuration
+venv/
+.venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Jupyter and editor files
 .ipynb_checkpoints/
 *.ipynb
+.vscode/
+.idea/
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
-# Virtual environment
-venv/
-env/
+# Trained model weights and generated outputs
+*.h5
+*.keras
+outputs/
+checkpoints/
+
+# Expo / React Native
+node_modules/
+.expo/
+dist/
+web-build/
+.expo-shared/
