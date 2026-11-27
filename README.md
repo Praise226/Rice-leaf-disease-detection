@@ -46,10 +46,9 @@ Rice-leaf-disease-detection/
 │   └── main.py
 ├── model/
 │   └── train.py
-├── frontend/             # Expo frontend setup notes; full app source pending integration
-├── demo/
-│   └── rice-leaf-disease-demo.mp4
+├── frontend/             # Expo frontend integration notes (app source pending)
 ├── requirements.txt
+├── .gitignore
 └── README.md
 ```
 
