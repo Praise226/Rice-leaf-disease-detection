@@ -236,32 +236,41 @@ print("Confusion matrix saved")
 
 # ─── 14. Grad-CAM++ implementation ───────────────────────────────────────────
 def get_gradcam_plusplus(model, img_array, layer_name, class_idx):
-    """
-    Generate Grad-CAM++ using the selected class score from the full model.
-    img_array must contain the original image pixel values expected by model.
-    """
+    """Generate Grad-CAM++ using the selected class score from the full classifier."""
     backbone = model.get_layer("mobilenetv2_1.00_224")
-    target_layer = backbone.get_layer(layer_name)
-    grad_model = tf.keras.models.Model(
-        inputs=model.inputs,
-        outputs=[target_layer.output, model.output],
+    conv_layer = backbone.get_layer(layer_name)
+    feature_model = tf.keras.models.Model(
+        inputs=backbone.input,
+        outputs=[conv_layer.output, backbone.output],
     )
 
+    # Reuse the model's own preprocessing and trained classification head.
+    backbone_index = model.layers.index(backbone)
+    classification_head = model.layers[backbone_index + 1:]
+    inputs = tf.cast(img_array, tf.float32)
+    preprocessed = model.layers[1](inputs, training=False)
+    preprocessed = model.layers[2](preprocessed, training=False)
+
     with tf.GradientTape() as tape:
-        inputs = tf.cast(img_array, tf.float32)
-        conv_outputs, predictions = grad_model(inputs, training=False)
+        conv_outputs, features = feature_model(preprocessed, training=False)
+        predictions = features
+        for layer in classification_head:
+            predictions = layer(predictions, training=False)
         class_score = predictions[:, class_idx]
 
     grads = tape.gradient(class_score, conv_outputs)
     if grads is None:
-        raise RuntimeError("Could not calculate Grad-CAM++ gradients.")
+        raise RuntimeError("Could not calculate Grad-CAM++ gradients for the selected class.")
 
     grads_power_2 = tf.square(grads)
-    grads_power_3 = grads_power_2 * grads
-    sum_activations = tf.reduce_sum(conv_outputs, axis=(1, 2), keepdims=True)
-
-    eps = tf.keras.backend.epsilon()
-    alpha_denom = 2.0 * grads_power_2 + sum_activations * grads_power_3 + eps
+    grads_power_3 = tf.pow(grads, 3)
+    sum_activations = tf.reduce_sum(conv_outputs, axis=(1, 2))
+    eps = 1e-7
+    alpha_denom = (
+        2.0 * grads_power_2
+        + sum_activations[:, tf.newaxis, tf.newaxis, :] * grads_power_3
+        + eps
+    )
     alphas = grads_power_2 / alpha_denom
     weights = tf.reduce_sum(alphas * tf.nn.relu(grads), axis=(1, 2))
 
