@@ -46,7 +46,7 @@ Rice-leaf-disease-detection/
 │   └── main.py
 ├── model/
 │   └── train.py
-├── frontend/             # Expo / React Native application source
+├── frontend/             # Expo frontend setup notes; full app source pending integration
 ├── demo/
 │   └── rice-leaf-disease-demo.mp4
 ├── requirements.txt
@@ -82,7 +82,7 @@ export MODEL_PATH="path/to/rice_model_api.h5"
 ### 3. Start the API
 
 ```bash
-uvicorn api.main:app --host 0.0.0.0 --port 8001
+uvicorn api.main:app --host localhost --port 8001
 ```
 
 For a phone running Expo Go to reach a backend running on your computer, configure the mobile app with the computer's reachable LAN address. The address is environment-specific and is not a public production endpoint.
@@ -114,7 +114,7 @@ The script trains the classifier, evaluates the test split, saves model files, a
 
 ## Mobile application
 
-The frontend is built with **React Native + Expo + TypeScript** (not React.js). See the `frontend/` directory for the application source and its setup instructions.
+The mobile client is built with **React Native + Expo + TypeScript** (not React.js). The cleaned Expo source package has been prepared separately; the `frontend/` directory currently contains integration notes and an environment example. The full app source still needs to be added to the repository.
 
 Set the API base URL for your development environment before starting Expo. A local development API address is expected while the backend runs on your own computer; it is not a hosted public service.
 
