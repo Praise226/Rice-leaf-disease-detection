@@ -1,0 +1,14 @@
+# API and model inference
+tensorflow
+fastapi
+uvicorn[standard]
+python-multipart
+pillow
+opencv-python-headless
+numpy
+
+# Training, evaluation, and plots
+matplotlib
+pandas
+scikit-learn
+seaborn
