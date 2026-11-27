@@ -37,38 +37,42 @@ def read_file_as_image(data: bytes) -> np.ndarray:
     return np.asarray(image, dtype=np.uint8)
 
 
-def generate_gradcam_plusplus(
-    model: tf.keras.Model,
-    img_array: np.ndarray,
-    layer_name: str,
-    class_idx: int,
-) -> np.ndarray:
-    """Generate Grad-CAM++ from the selected class score of the full model."""
+def generate_gradcam_plusplus(model, img_array, layer_name, class_idx):
+    """Generate Grad-CAM++ using the selected class score from the full classifier."""
     backbone = model.get_layer("mobilenetv2_1.00_224")
-    target_layer = backbone.get_layer(layer_name)
-
-    # Use the original model input and final classifier output. This keeps the
-    # gradient connected to the selected class score, not just backbone features.
-    grad_model = tf.keras.models.Model(
-        inputs=model.inputs,
-        outputs=[target_layer.output, model.output],
+    conv_layer = backbone.get_layer(layer_name)
+    feature_model = tf.keras.models.Model(
+        inputs=backbone.input,
+        outputs=[conv_layer.output, backbone.output],
     )
 
-    input_tensor = tf.convert_to_tensor(img_array, dtype=tf.float32)
+    # Preserve the model's own preprocessing and trained classification head.
+    backbone_index = model.layers.index(backbone)
+    classification_head = model.layers[backbone_index + 1:]
+    inputs = tf.cast(img_array, tf.float32)
+    preprocessed = model.layers[1](inputs, training=False)
+    preprocessed = model.layers[2](preprocessed, training=False)
+
     with tf.GradientTape() as tape:
-        conv_outputs, predictions = grad_model(input_tensor, training=False)
+        conv_outputs, features = feature_model(preprocessed, training=False)
+        predictions = features
+        for layer in classification_head:
+            predictions = layer(predictions, training=False)
         class_score = predictions[:, class_idx]
 
     grads = tape.gradient(class_score, conv_outputs)
     if grads is None:
-        raise RuntimeError("Could not calculate Grad-CAM++ gradients for the target layer.")
+        raise RuntimeError("Could not calculate Grad-CAM++ gradients for the selected class.")
 
     grads_power_2 = tf.square(grads)
-    grads_power_3 = grads_power_2 * grads
-    sum_activations = tf.reduce_sum(conv_outputs, axis=(1, 2), keepdims=True)
-
-    eps = tf.keras.backend.epsilon()
-    alpha_denom = 2.0 * grads_power_2 + sum_activations * grads_power_3 + eps
+    grads_power_3 = tf.pow(grads, 3)
+    sum_activations = tf.reduce_sum(conv_outputs, axis=(1, 2))
+    eps = 1e-7
+    alpha_denom = (
+        2.0 * grads_power_2
+        + sum_activations[:, tf.newaxis, tf.newaxis, :] * grads_power_3
+        + eps
+    )
     alphas = grads_power_2 / alpha_denom
     weights = tf.reduce_sum(alphas * tf.nn.relu(grads), axis=(1, 2))
 
@@ -76,7 +80,6 @@ def generate_gradcam_plusplus(
     cam = tf.nn.relu(cam)
     cam = cam / (tf.reduce_max(cam) + eps)
     return cam.numpy()
-
 
 def overlay_heatmap_on_image(img_array: np.ndarray, cam: np.ndarray, alpha: float = 0.4):
     heatmap = cv2.resize(cam, (img_array.shape[1], img_array.shape[0]))
