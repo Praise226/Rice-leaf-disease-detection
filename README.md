@@ -1,6 +1,6 @@
 # Rice Leaf Disease Detection System
 
-An AI-assisted mobile application for classifying rice leaf images into five categories, with Grad-CAM++ visual explanations. Developed as a final-year project at the University of Medical Sciences, Ondo (UNIMED).
+A mobile application for classifying rice leaf images into five categories, with Grad-CAM++ visual explanations. Developed as a final-year project at the University of Medical Sciences, Ondo (UNIMED).
 
 > **Important:** This is an academic prototype for preliminary image-based screening. It is not a substitute for field diagnosis or advice from a qualified agronomist. Performance on the test dataset does not establish real-world field accuracy.
 
